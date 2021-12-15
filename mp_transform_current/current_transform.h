@@ -5,25 +5,25 @@
  * @Last Modified time: 2021-11-25 10:47:48
  */
 
-#include <xc.h>
+#include <stdint.h>
 
 #define RANGE1_TRANSFORMATION_FACTOR        1       // in tmA/mA
 #define RANGE1_INV_TRANSFORMATION_FACTOR    1       // in mA/tmA
-#define RANGE1_WIDTH_mA     200                 // in mA
-#define RANGE1_WIDTH_tmA    200                 // in tmA
+#define RANGE1_WIDTH_mA     200                     // in mA
+#define RANGE1_WIDTH_tmA    200                     // in tmA
 
 #define RANGE2_TRANSFORMATION_FACTOR        0.5     // in tmA/mA
 #define RANGE2_INV_TRANSFORMATION_FACTOR    2       // in mA/tmA
-#define RANGE2_WIDTH_mA     800                 // in mA
-#define RANGE2_WIDTH_tmA    400                 // in tmA
+#define RANGE2_WIDTH_mA     800                     // in mA
+#define RANGE2_WIDTH_tmA    400                     // in tmA
 
 #define RANGE3_TRANSFORMATION_FACTOR        0.1     // in tmA/mA
 #define RANGE3_INV_TRANSFORMATION_FACTOR    10      // in mA/tmA
-#define RANGE3_WIDTH_mA     4000                // in mA
-#define RANGE3_WIDTH_tmA    400                 // in mA
+#define RANGE3_WIDTH_mA     4000                    // in mA
+#define RANGE3_WIDTH_tmA    400                     // in mA
 
-#define END_OF_SCALE_mA     5000                // mA
-#define END_OF_SCALE_tmA    1000                // tmA
+#define END_OF_SCALE_mA     5000                    // mA
+#define END_OF_SCALE_tmA    1000                    // tmA
 
 
 /*

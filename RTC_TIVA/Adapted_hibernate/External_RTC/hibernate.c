@@ -21,7 +21,6 @@
 #include "driverlib/systick.h"
 #include "utils/ustdlib.h"
 #include "utils/uartstdio.h"
-#include "utils/cmdline.h"
 #include "drivers/buttons.h"
 #include "drivers/pinout.h"
 
@@ -564,7 +563,7 @@ main(void)
 {
     bool bUpdate;
     uint32_t ui32SysClock, ui32Status, ui32HibernateCount, ui32Len;
-    int32_t i32CmdStatus;
+    //int32_t i32CmdStatus;
 
     //
     // Run from the PLL at 120 MHz.
@@ -574,11 +573,14 @@ main(void)
                                            SYSCTL_USE_PLL |
                                            SYSCTL_CFG_VCO_480), 120000000);
 
+
+    // TODO: probably remove or change the aproach to pin configuration
     //
     // Configure the device pins.
     //
     PinoutSet(false, false);
 
+    // TODO: remove or adapt to NEO-FIRMWARE
     //
     // Enable UART0
     //
@@ -600,6 +602,8 @@ main(void)
     ui32Status = 0;
     ui32HibernateCount = 0;
 
+
+    // TODO: Simplify the hibernate wake
     //
     // Check to see if Hibernation module is already active, which could mean
     // that the processor is waking from a hibernation.
@@ -695,6 +699,12 @@ main(void)
         ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf), "%s",
                             g_ppcWakeSource[4]);
 
+
+        UARTprintf("\033[2J\033[H");
+        UARTprintf("Woken by a system reset!\n");
+        UARTprintf("> ");
+        UARTFlushTx(false);
+
         //
         // Set flag to indicate we need a valid date.  Date will then be set
         // in the while(1) loop.
@@ -743,7 +753,7 @@ main(void)
     //
     // Enable processor interrupts.
     //
-    IntMasterEnable();
+    IntMasterEnable();  // TODO: Verify the need for this duplicity
 
     //
     // If hibernation count is very large, it may be that there was already
@@ -755,17 +765,6 @@ main(void)
     // Initialize the necessary flags before entering indefinite loop.
     //
     g_bHibernate = false;
-
-    //
-    // Clear the terminal and print the banner.
-    //
-    UARTprintf("\033[2J\033[H");
-    UARTprintf("%s\n", g_pcWakeBuf);
-    UARTprintf("Welcome to the Tiva C Series TM4C1294 LaunchPad!\n");
-    UARTprintf("Hibernation Example\n");
-    UARTprintf("Type 'help' for a list of commands\n");
-    UARTprintf("> ");
-    UARTFlushTx(false);
 
     //
     // Set flag that next update is the first ever.
@@ -831,8 +830,6 @@ main(void)
             UARTprintf("\033[K");
             UARTprintf("%s\n", g_pcHibBuf);
             UARTprintf("\033[K");
-            UARTprintf("To Hibernate type 'hib' and press ENTER or press "
-                       "USR_SW1\n");
 
             //
             // Check if this is first ever update.
@@ -861,7 +858,7 @@ main(void)
             g_bFirstUpdate = false;
 
         }
-
+        /*
         //
         // Check if a carriage return is present in the UART Buffer.
         //
@@ -904,6 +901,7 @@ main(void)
 
             UARTprintf(">");
         }
+        */
 
         //
         // Check if user wants to enter hibernation.

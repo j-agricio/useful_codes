@@ -24,38 +24,6 @@
 #include "drivers/buttons.h"
 #include "drivers/pinout.h"
 
-//*****************************************************************************
-//
-//! \addtogroup example_list
-//! <h1>Hibernate Example (hibernate)</h1>
-//!
-//! An example to demonstrate the use of the Hibernation module.  The user
-//! can put the microcontroller in hibernation by typing 'hib' in the terminal
-//! and pressing ENTER or by pressing USR_SW1 on the board.  The
-//! microcontroller will then wake on its own after 5 seconds, or immediately
-//! if the user presses the RESET button.  The External WAKE button, external
-//! WAKE pins, and GPIO (PK6) wake sources can also be used to wake
-//! immediately from hibernation.  The following wiring enables the use of
-//! these pins as wake sources.
-//!     WAKE on breadboard connection header (X11-95) to GND
-//!     PK6 on BoosterPack 2 (X7-17) to GND
-//!     PK6 on breadboard connection header (X11-63) to GND
-//!
-//! The program keeps a count of the number of times it has entered
-//! hibernation.  The value of the counter is stored in the battery-backed
-//! memory of the Hibernation module so that it can be retrieved when the
-//! microcontroller wakes.  The program displays the wall time and date by
-//! making use of the calendar function of the Hibernate module.  User can
-//! modify the date and time if so desired.
-//
-//*****************************************************************************
-
-//*****************************************************************************
-//
-// A collection of wake sources that will be displayed to indicate the source
-// of the most recent wake.
-//
-//*****************************************************************************
 static char *g_ppcWakeSource[] =
 {
     "RTC TIMEOUT",
@@ -114,13 +82,6 @@ volatile bool g_bSetDate;
 //
 //*****************************************************************************
 char g_pcWakeBuf[40], g_pcHibBuf[40], g_pcDateTimeBuf[40];
-
-//*****************************************************************************
-//
-// Buffer to store user command line input.
-//
-//*****************************************************************************
-char g_pcInputBuf[40];
 
 //*****************************************************************************
 //
@@ -508,6 +469,7 @@ AppHibernateEnter(void)
     //
     // Configure Hibernate wake sources.
     //
+    // TODO: Adaptate to neo-firmware defined wake sources
     HibernateWakeSet(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_GPIO |
                      HIBERNATE_WAKE_RESET); //| HIBERNATE_WAKE_RTC);
 
@@ -522,6 +484,7 @@ AppHibernateEnter(void)
     //
     SysCtlDelay(100);
 
+    // TODO: Adaptante print to neo-firmware debug
     //
     // If it ever gets here, store the text, that informs the user on
     // what to do, into the respective widget buffers.
@@ -537,6 +500,7 @@ AppHibernateEnter(void)
     }
 }
 
+// TODO: Remove - utilize neo-firmware pins pooling
 //*****************************************************************************
 //
 // This function is the interrupt handler for the SysTick timer.  It monitors
@@ -563,7 +527,6 @@ main(void)
 {
     bool bUpdate;
     uint32_t ui32SysClock, ui32Status, ui32HibernateCount, ui32Len;
-    //int32_t i32CmdStatus;
 
     //
     // Run from the PLL at 120 MHz.
@@ -573,12 +536,6 @@ main(void)
                                            SYSCTL_USE_PLL |
                                            SYSCTL_CFG_VCO_480), 120000000);
 
-
-    // TODO: probably remove or change the aproach to pin configuration
-    //
-    // Configure the device pins.
-    //
-    PinoutSet(false, false);
 
     // TODO: remove or adapt to NEO-FIRMWARE
     //
@@ -624,6 +581,7 @@ main(void)
         ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf),
                             "Wake Due To : ");
 
+        /*
         //
         // Wake was due to RTC match.
         //
@@ -663,6 +621,7 @@ main(void)
                                 sizeof(g_pcWakeBuf) - ui32Len, "%s",
                                 g_ppcWakeSource[3]);
         }
+        */
 
         //
         // If the wake is due to any of the configured wake sources, then read
@@ -699,11 +658,11 @@ main(void)
         ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf), "%s",
                             g_ppcWakeSource[4]);
 
-
         UARTprintf("\033[2J\033[H");
         UARTprintf("Woken by a system reset!\n");
         UARTprintf("> ");
         UARTFlushTx(false);
+
 
         //
         // Set flag to indicate we need a valid date.  Date will then be set
@@ -728,6 +687,7 @@ main(void)
     //
     HibernateCounterMode(HIBERNATE_COUNTER_24HR);
 
+    /*
     //
     // Configure GPIOs used as Hibernate wake source.  PK6 is configured as a
     // wake source.  It is available on EK-TM4C1294XL BoosterPack 2 (X7-17)
@@ -741,7 +701,9 @@ main(void)
     // Initialize the buttons
     //
     ButtonsInit();
+    */
 
+    // TODO: Adapt to de NEO-FIRMWARE POOLING WAY
     //
     // Initialize the SysTick interrupt to process user buttons.
     //
@@ -858,50 +820,6 @@ main(void)
             g_bFirstUpdate = false;
 
         }
-        /*
-        //
-        // Check if a carriage return is present in the UART Buffer.
-        //
-        if(UARTPeek('\r') != -1)
-        {
-            //
-            // A '\r' was detected, so get the line of text from the user.
-            //
-            UARTgets(g_pcInputBuf,sizeof(g_pcInputBuf));
-
-            //
-            // Pass the line from the user to the command processor.
-            // It will be parsed and valid commands executed.
-            //
-            i32CmdStatus = CmdLineProcess(g_pcInputBuf);
-
-            //
-            // Handle the case of bad command.
-            //
-            if(i32CmdStatus == CMDLINE_BAD_CMD)
-            {
-                UARTprintf("Command not recognized!\n");
-            }
-
-            //
-            // Handle the case of too many arguments.
-            //
-            else if(i32CmdStatus == CMDLINE_TOO_MANY_ARGS)
-            {
-                UARTprintf("Too many arguments for command processor!\n");
-            }
-
-            //
-            // Handle the case of too few arguments.
-            //
-            else if(i32CmdStatus == CMDLINE_TOO_FEW_ARGS)
-            {
-                UARTprintf("Too few arguments for command processor!\n");
-            }
-
-            UARTprintf(">");
-        }
-        */
 
         //
         // Check if user wants to enter hibernation.

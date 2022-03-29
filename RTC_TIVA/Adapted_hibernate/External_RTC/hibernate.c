@@ -24,6 +24,8 @@
 #include "drivers/buttons.h"
 #include "drivers/pinout.h"
 
+#define NOT_USED_VALUE 666
+
 static char *g_ppcWakeSource[] =
 {
     "RTC TIMEOUT",
@@ -536,6 +538,11 @@ main(void)
                                            SYSCTL_USE_PLL |
                                            SYSCTL_CFG_VCO_480), 120000000);
 
+    // TODO: probably remove or change the aproach to pin configuration
+    //
+    // Configure the device pins.
+    //
+    PinoutSet(false, false);
 
     // TODO: remove or adapt to NEO-FIRMWARE
     //
@@ -629,7 +636,7 @@ main(void)
         // hibernation count.
         //
         if(ui32Status & (HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_RTC_MATCH_0 |
-                         HIBERNATE_INT_GPIO_WAKE | HIBERNATE_INT_RESET_WAKE))
+                              HIBERNATE_INT_GPIO_WAKE | HIBERNATE_INT_RESET_WAKE))
         {
             HibernateDataGet(&ui32HibernateCount, 1);
         }
@@ -638,19 +645,22 @@ main(void)
     //
     // Configure Hibernate module clock.
     //
-    HibernateEnableExpClk(ui32SysClock);
+    HibernateEnableExpClk(NOT_USED_VALUE);
 
     //
     // If the wake was not due to the above sources, then it was a system
     // reset.
     //
     if(!(ui32Status & (HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_RTC_MATCH_0 |
-                       HIBERNATE_INT_GPIO_WAKE | HIBERNATE_INT_RESET_WAKE)))
+                       HIBERNATE_INT_GPIO_WAKE | HIBERNATE_INT_RESET_WAKE |
+                       HIBERNATE_INT_VDDFAIL)))
     {
         //
         // Configure the module clock source.
         //
         HibernateClockConfig(HIBERNATE_OSC_LOWDRIVE);   // 12 pF capacitor compensation = Low Drive | 24 pF capacitor compensation = High Drive
+
+        HibernateDataSet(&ui32HibernateCount, 1); // Sets hibernation counter to zero
 
         //
         // Store that this was a system restart not wake from hibernation.
@@ -658,11 +668,14 @@ main(void)
         ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf), "%s",
                             g_ppcWakeSource[4]);
 
+        /*
+
         UARTprintf("\033[2J\033[H");
         UARTprintf("Woken by a system reset!\n");
         UARTprintf("> ");
         UARTFlushTx(false);
 
+        */
 
         //
         // Set flag to indicate we need a valid date.  Date will then be set
@@ -787,11 +800,13 @@ main(void)
             //
             // Resend the current status and time.
             //
+            UARTFlushTx(true);
             UARTprintf("\033[%d;1H\033[K", g_ui8FirstLine);
             UARTprintf("The current date and time is: %s\n", g_pcDateTimeBuf);
             UARTprintf("\033[K");
             UARTprintf("%s\n", g_pcHibBuf);
             UARTprintf("\033[K");
+
 
             //
             // Check if this is first ever update.
@@ -832,6 +847,10 @@ main(void)
             //
             ui32HibernateCount++;
             HibernateDataSet(&ui32HibernateCount, 1);
+
+            UARTprintf("\033[2J\033[H");
+            UARTprintf("Hibernation by request!\n");
+            UARTFlushTx(false);
 
             //
             // Yes - Clear the flag.

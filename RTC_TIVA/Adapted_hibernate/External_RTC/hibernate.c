@@ -556,11 +556,6 @@ main(void)
     UARTStdioConfig(0, 115200, ui32SysClock);
 
     //
-    // Enable the hibernate module.
-    //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_HIBERNATE);
-
-    //
     // Initialize these variables before they are used.
     //
     ui32Status = 0;
@@ -574,6 +569,9 @@ main(void)
     //
     if(HibernateIsActive())
     {
+        UARTprintf("Hibernation is active!\n");
+        UARTprintf("> ");
+        UARTFlushTx(false);
         //
         // Read the status bits to see what caused the wake.  Clear the wake
         // source so that the device can be put into hibernation again.
@@ -641,7 +639,60 @@ main(void)
             HibernateDataGet(&ui32HibernateCount, 1);
         }
     }
+    else
+    {
+        UARTprintf("Hibernation wasn't active!\n");
+        UARTprintf("> ");
+        UARTFlushTx(false);
+        //
+        // Enable the hibernate module.
+        //
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_HIBERNATE);
 
+        //
+        // Configure the module clock source.
+        //
+        HibernateClockConfig(HIBERNATE_OSC_LOWDRIVE);   // 12 pF capacitor compensation = Low Drive | 24 pF capacitor compensation = High Drive
+
+        HibernateDataSet(&ui32HibernateCount, 1); // Sets hibernation counter to zero
+
+        //
+        // Store that this was a system restart not wake from hibernation.
+        //
+        ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf), "%s",
+                            g_ppcWakeSource[4]);
+
+        //
+        // Configure Hibernate module clock.
+        //
+        HibernateEnableExpClk(NOT_USED_VALUE);
+
+
+        //
+        // Set flag to indicate we need a valid date.  Date will then be set
+        // in the while(1) loop.
+        //
+        g_bSetDate = true;
+
+        //
+        // Store the hibernation count message into the respective char buffer.
+        //
+        usnprintf(g_pcHibBuf, sizeof(g_pcHibBuf), "Hibernate count = %u",
+                  ui32HibernateCount);
+
+        //
+        // Enable RTC mode.
+        //
+        HibernateRTCEnable();
+
+        //
+        // Configure the hibernate module counter to 24-hour calendar mode.
+        //
+        HibernateCounterMode(HIBERNATE_COUNTER_24HR);
+
+    }
+
+    /*
     //
     // Configure Hibernate module clock.
     //
@@ -668,14 +719,12 @@ main(void)
         ui32Len = usnprintf(g_pcWakeBuf, sizeof(g_pcWakeBuf), "%s",
                             g_ppcWakeSource[4]);
 
-        /*
 
         UARTprintf("\033[2J\033[H");
         UARTprintf("Woken by a system reset!\n");
         UARTprintf("> ");
         UARTFlushTx(false);
 
-        */
 
         //
         // Set flag to indicate we need a valid date.  Date will then be set
@@ -683,6 +732,7 @@ main(void)
         //
         g_bSetDate = true;
     }
+
 
     //
     // Store the hibernation count message into the respective char buffer.
@@ -699,7 +749,7 @@ main(void)
     // Configure the hibernate module counter to 24-hour calendar mode.
     //
     HibernateCounterMode(HIBERNATE_COUNTER_24HR);
-
+    */
     /*
     //
     // Configure GPIOs used as Hibernate wake source.  PK6 is configured as a
